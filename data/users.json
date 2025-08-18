@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "firstname": "Admin",
+      "registrationDate": "2025-06-04T00:00:00.000Z"
+    }
+  ]
+}
