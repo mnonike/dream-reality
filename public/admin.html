@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dream Reality | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-light: #5dade2;
+            --primary-dark: #2980b9;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --white: #ffffff;
+            --card-bg: var(--white);
+            --text-color: var(--dark);
+            --text-muted: var(--gray);
+            --border-color: #dfe6e9;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        /* Dark theme variables */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3498db;
+                --primary-light: #5dade2;
+                --primary-dark: #2980b9;
+                --light: #2c3e50;
+                --dark: #ecf0f1;
+                --gray: #7f8c8d;
+                --white: #34495e;
+                --card-bg: #2c3e50;
+                --text-color: #ecf0f1;
+                --text-muted: #bdc3c7;
+                --border-color: #34495e;
+                --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        /* Header */
+        header {
+            background-color: var(--white);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .logo img {
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+
+        .logo span {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-logout {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-logout:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* Main container */
+        .container {
+            padding: 2rem 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Section titles */
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        /* Upload section */
+        .upload-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .preview-container {
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .media-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            display: none;
+            margin: 0 auto;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        /* Buttons */
+        .btn-submit {
+            background: var(--primary);
+            color: var(--white);
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            font-size: 1rem;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem 1rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Content lists */
+        .content-list, .payment-list {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Content item */
+        .content-item {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .content-media {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+        }
+
+        .content-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .content-title {
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        .content-project {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .content-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        /* Payment item */
+        .payment-item {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .payment-proof {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+        }
+
+        .payment-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .payment-user {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        .payment-phone {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .payment-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .payment-status {
+            padding: 0.3rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 0.3rem;
+            width: fit-content;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+
+        .status-approved {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--secondary);
+        }
+
+        .status-rejected {
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
+        }
+
+        .payment-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn-success {
+            background: var(--secondary);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        /* Top content */
+        .top-content {
+            margin-bottom: 2rem;
+        }
+
+        .top-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 10px;
+            margin-bottom: 0.8rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .top-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .top-item img, .top-item video {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+        }
+
+        .top-item-info {
+            flex: 1;
+        }
+
+        .top-item-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        .top-item-likes {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .top-item-likes i {
+            color: var(--danger);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-item {
+                grid-template-columns: 80px 1fr auto;
+            }
+
+            .content-media {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .content-item {
+                grid-template-columns: 1fr;
+            }
+
+            .content-media {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+
+            .payment-item {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-proof {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+
+            .payment-actions {
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .upload-section {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .payment-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <img src="untitled.png" alt="Dream Reality Logo">
+            <span>Admin Dashboard</span>
+        </a>
+        <button class="btn btn-logout" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </button>
+    </header>
+
+    <!-- Main container -->
+    <div class="container">
+        <h1 class="section-title">Content Management</h1>
+
+        <!-- Upload section -->
+        <div class="upload-section">
+            <h2 class="section-title">Upload New Content</h2>
+            <form id="upload-form" class="form-grid">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="project-title">Project Title</label>
+                    <input type="text" id="project-title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" required>
+                        <option value="image">Image</option>
+                        <option value="video">Video</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">Media File</label>
+                    <input type="file" id="file" accept="image/*,video/*" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description"></textarea>
+                </div>
+
+                <div class="preview-container">
+                    <h3>Preview</h3>
+                    <img id="image-preview" class="media-preview" alt="Image preview">
+                    <video id="video-preview" class="media-preview" muted playsinline></video>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload Content
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Stats grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Total Artworks</div>
+                <div class="stat-value" id="total-artworks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Likes</div>
+                <div class="stat-value" id="total-likes">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Comments</div>
+                <div class="stat-value" id="total-comments">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Pending Payments</div>
+                <div class="stat-value" id="pending-payments">0</div>
+            </div>
+        </div>
+
+        <!-- Top content -->
+        <div class="top-content">
+            <h2 class="section-title">Most Liked Content</h2>
+            <div id="top-content-list">
+                <p class="empty-state">Loading top content...</p>
+            </div>
+        </div>
+
+        <!-- All content -->
+        <h2 class="section-title">All Content</h2>
+        <div class="content-list" id="content-list">
+            <p class="empty-state">Loading content...</p>
+        </div>
+
+        <!-- Payment requests -->
+        <h2 class="section-title">Payment Requests</h2>
+        <div class="payment-list" id="payment-list">
+            <p class="empty-state">Loading payment requests...</p>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const logoutBtn = document.getElementById('logout-btn');
+        const fileInput = document.getElementById('file');
+        const imagePreview = document.getElementById('image-preview');
+        const videoPreview = document.getElementById('video-preview');
+        const uploadForm = document.getElementById('upload-form');
+        const totalArtworks = document.getElementById('total-artworks');
+        const totalLikes = document.getElementById('total-likes');
+        const totalComments = document.getElementById('total-comments');
+        const pendingPayments = document.getElementById('pending-payments');
+        const topContentList = document.getElementById('top-content-list');
+        const contentList = document.getElementById('content-list');
+        const paymentList = document.getElementById('payment-list');
+        const socket = io();
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check admin status
+            if (localStorage.getItem('currentUser') !== 'admin') {
+                window.location.href = '/login';
+            }
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Load initial data
+            loadDashboardData();
+
+            // Socket.io listeners
+            socket.on('content-updated', (items) => {
+                renderContentList(items);
+                loadDashboardData();
+            });
+
+            socket.on('payment-added', (payment) => {
+                loadDashboardData();
+            });
+
+            socket.on('payment-approved', () => {
+                loadDashboardData();
+            });
+        });
+
+        function setupEventListeners() {
+            // Logout button
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login';
+            });
+
+            // File input change for preview
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Form submission
+            uploadForm.addEventListener('submit', handleFormSubmit);
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const type = document.getElementById('type').value;
+
+            // Hide both previews first
+            imagePreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+
+            if (type === 'image') {
+                imagePreview.src = URL.createObjectURL(file);
+                imagePreview.style.display = 'block';
+            } else {
+                videoPreview.src = URL.createObjectURL(file);
+                videoPreview.style.display = 'block';
+            }
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('projectTitle', document.getElementById('project-title').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('media', document.getElementById('file').files[0]);
+
+            try {
+                const response = await fetch('/api/content', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Upload failed');
+
+                const result = await response.json();
+                alert('Content uploaded successfully!');
+                uploadForm.reset();
+                imagePreview.style.display = 'none';
+                videoPreview.style.display = 'none';
+            } catch (err) {
+                console.error('Upload error:', err);
+                alert('Failed to upload content');
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Load analytics
+                const analyticsRes = await fetch('/api/analytics');
+                if (!analyticsRes.ok) throw new Error('Failed to load analytics');
+                const analytics = await analyticsRes.json();
+
+                // Update stats
+                totalArtworks.textContent = analytics.stats.totalArtworks;
+                totalLikes.textContent = analytics.stats.totalLikes;
+                totalComments.textContent = analytics.stats.totalComments;
+                pendingPayments.textContent = analytics.stats.pendingPayments;
+
+                // Render top content
+                renderTopContent(analytics.mostLiked);
+
+                // Load all content
+                const contentRes = await fetch('/api/content');
+                if (!contentRes.ok) throw new Error('Failed to load content');
+                const content = await contentRes.json();
+
+                // Render content list
+                renderContentList(content.items);
+
+                // Load payment requests
+                const paymentsRes = await fetch('/api/admin/payments');
+                if (!paymentsRes.ok) throw new Error('Failed to load payments');
+                const payments = await paymentsRes.json();
+
+                // Render payment list
+                renderPaymentList(payments.payments);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                contentList.innerHTML = 
+                    `<p class="empty-state">Error loading data: ${error.message}</p>`;
+            }
+        }
+
+        function renderTopContent(items) {
+            topContentList.innerHTML = '';
+
+            if (!items || items.length === 0) {
+                topContentList.innerHTML = '<p class="empty-state">No content available</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                const element = document.createElement('div');
+                element.className = 'top-item';
+                element.innerHTML = `
+                    ${item.type === 'image' ? 
+                        `<img src="/uploads/${item.filename}" alt="${item.title}">` : 
+                        `<video src="/uploads/${item.filename}" muted playsinline></video>`}
+                    <div class="top-item-info">
+                        <div class="top-item-title">${item.title}</div>
+                        <div class="top-item-likes">
+                            <i class="fas fa-heart"></i> ${item.likes || 0} likes
+                        </div>
+                    </div>
+                `;
+                topContentList.appendChild(element);
+            });
+        }
+
+        function renderContentList(items) {
+            contentList.innerHTML = '';
+
+            if (!items || items.length === 0) {
+                contentList.innerHTML = '<p class="empty-state">No content available</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                const element = document.createElement('div');
+                element.className = 'content-item';
+                element.innerHTML = `
+                    ${item.type === 'image' ? 
+                        `<img src="/uploads/${item.filename}" class="content-media" alt="${item.title}">` : 
+                        `<video src="/uploads/${item.filename}" class="content-media" muted playsinline></video>`}
+                    <div class="content-info">
+                        <div class="content-title">${item.title}</div>
+                        <div class="content-project">${item.projectTitle}</div>
+                        <div class="content-description">${item.description || 'No description'}</div>
+                        <div class="content-date">
+                            ${new Date(item.uploadDate).toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="content-actions">
+                        <button class="btn btn-danger" data-id="${item.id}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+
+                // Add delete event listener
+                const deleteBtn = element.querySelector('button');
+                deleteBtn.addEventListener('click', async () => {
+                    if (confirm('Are you sure you want to delete this content?')) {
+                        try {
+                            const response = await fetch(`/api/content/${item.id}`, {
+                                method: 'DELETE'
+                            });
+
+                            if (!response.ok) throw new Error('Delete failed');
+
+                            loadDashboardData();
+                        } catch (error) {
+                            console.error('Delete error:', error);
+                            alert('Failed to delete content');
+                        }
+                    }
+                });
+
+                contentList.appendChild(element);
+            });
+        }
+
+        function renderPaymentList(payments) {
+            paymentList.innerHTML = '';
+
+            if (!payments || payments.length === 0) {
+                paymentList.innerHTML = '<p class="empty-state">No payment requests available</p>';
+                return;
+            }
+
+            payments.forEach(payment => {
+                const element = document.createElement('div');
+                element.className = 'payment-item';
+                element.innerHTML = `
+                    <img src="/payment-proofs/${payment.proofFilename}" class="payment-proof" alt="Payment proof">
+                    <div class="payment-info">
+                        <div class="payment-user">${payment.userFirstName}</div>
+                        <div class="payment-phone">${payment.userPhone}</div>
+                        <div class="payment-date">
+                            ${new Date(payment.date).toLocaleString()}
+                        </div>
+                        <div class="payment-status status-${payment.status}">
+                            ${payment.status.toUpperCase()}
+                        </div>
+                    </div>
+                    <div class="payment-actions">
+                        ${payment.status === 'pending' ? `
+                            <button class="btn btn-success" data-id="${payment.id}" data-action="approve">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-danger" data-id="${payment.id}" data-action="reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Add event listeners for approve/reject buttons
+                const approveBtn = element.querySelector('[data-action="approve"]');
+                const rejectBtn = element.querySelector('[data-action="reject"]');
+
+                if (approveBtn) {
+                    approveBtn.addEventListener('click', async () => {
+                        if (confirm('Are you sure you want to approve this payment?')) {
+                            try {
+                                const response = await fetch(`/api/admin/payments/${approveBtn.getAttribute('data-id')}/approve`, {
+                                    method: 'POST'
+                                });
+
+                                if (!response.ok) throw new Error('Approval failed');
+
+                                loadDashboardData();
+                            } catch (error) {
+                                console.error('Approval error:', error);
+                                alert('Failed to approve payment');
+                            }
+                        }
+                    });
+                }
+
+                if (rejectBtn) {
+                    rejectBtn.addEventListener('click', async () => {
+                        if (confirm('Are you sure you want to reject this payment?')) {
+                            try {
+                                const response = await fetch(`/api/admin/payments/${rejectBtn.getAttribute('data-id')}/reject`, {
+                                    method: 'POST'
+                                });
+
+                                if (!response.ok) throw new Error('Rejection failed');
+
+                                loadDashboardData();
+                            } catch (error) {
+                                console.error('Rejection error:', error);
+                                alert('Failed to reject payment');
+                            }
+                        }
+                    });
+                }
+
+                paymentList.appendChild(element);
+            });
+        }
+    </script>
+</body>
+</html>
