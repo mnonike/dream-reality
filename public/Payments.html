@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Reality | Payment</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-light: #5dade2;
+            --primary-dark: #2980b9;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --white: #ffffff;
+            --card-bg: var(--white);
+            --text-color: var(--dark);
+            --text-muted: var(--gray);
+            --border-color: #dfe6e9;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        /* Dark theme variables */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3498db;
+                --primary-light: #5dade2;
+                --primary-dark: #2980b9;
+                --light: #2c3e50;
+                --dark: #ecf0f1;
+                --gray: #7f8c8d;
+                --white: #34495e;
+                --card-bg: #2c3e50;
+                --text-color: #ecf0f1;
+                --text-muted: #bdc3c7;
+                --border-color: #34495e;
+                --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        /* Header */
+        header {
+            background-color: var(--white);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .logo img {
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+
+        .logo span {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-logout {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-logout:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* Main content */
+        .payment-container {
+            flex: 1;
+            padding: 2rem 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .payment-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .payment-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--text-color);
+            position: relative;
+        }
+
+        .payment-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .payment-info {
+            margin-bottom: 2rem;
+        }
+
+        .payment-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .payment-label {
+            color: var(--text-muted);
+        }
+
+        .payment-value {
+            font-weight: bold;
+        }
+
+        .payment-amount {
+            font-size: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        /* Upload section */
+        .upload-section {
+            margin: 2rem 0;
+        }
+
+        .upload-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .upload-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .upload-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+        }
+
+        .preview-container {
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            display: none;
+            margin: 0 auto;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        /* Buttons */
+        .submit-btn {
+            background: var(--primary);
+            color: var(--white);
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            font-size: 1rem;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .whatsapp-btn {
+            background: #25D366;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .whatsapp-btn:hover {
+            background: #128C7E;
+            transform: translateY(-2px);
+        }
+
+        /* Verified section */
+        .verified-section {
+            text-align: center;
+            padding: 2rem 0;
+            display: none;
+        }
+
+        .verified-badge {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .verified-badge i {
+            font-size: 2rem;
+        }
+
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow);
+            z-index: 90;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .fab:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .payment-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .payment-card {
+                padding: 1.5rem;
+            }
+
+            .payment-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <img src="untitled.png" alt="Dream Reality Logo">
+            <span>Dream Reality</span>
+        </a>
+        <button class="btn btn-logout" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </button>
+    </header>
+
+    <!-- Main content -->
+    <main class="payment-container">
+        <div class="payment-card">
+            <h1 class="payment-title">Payment Details</h1>
+            
+            <div id="payment-form">
+                <div class="payment-info">
+                    <div class="payment-detail">
+                        <span class="payment-label">Account Name:</span>
+                        <span class="payment-value">Ogugua Onyinye nkoli</span>
+                    </div>
+                    <div class="payment-detail">
+                        <span class="payment-label">Account Number:</span>
+                        <span class="payment-value">6016353186</span>
+                    </div>
+                    <div class="payment-detail">
+                        <span class="payment-label">Bank Name:</span>
+                        <span class="payment-value">Fidelity Bank</span>
+                    </div>
+                </div>
+
+                <div class="payment-amount">
+                    ₦20,000
+                </div>
+
+                <div class="upload-section">
+                    <label class="upload-label">Upload Payment Proof:</label>
+                    <input type="file" id="payment-proof" class="upload-input" accept="image/*">
+                    <div class="preview-container">
+                        <img id="payment-preview" class="preview-image" alt="Payment proof preview">
+                    </div>
+                </div>
+
+                <button class="submit-btn" id="submit-payment">
+                    <i class="fas fa-paper-plane"></i> Submit Payment
+                </button>
+            </div>
+
+            <div id="verified-section" class="verified-section">
+                <div class="verified-badge">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Payment Verified!</span>
+                </div>
+                <p>You can now contact admin for further instructions.</p>
+                <a href="https://wa.me/1234567890" class="whatsapp-btn" target="_blank">
+                    <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating action button -->
+    <div class="fab" id="whatsapp-float">
+        <i class="fab fa-whatsapp"></i>
+    </div>
+
+    <script>
+        // DOM elements
+        const logoutBtn = document.getElementById('logout-btn');
+        const paymentProofInput = document.getElementById('payment-proof');
+        const paymentPreview = document.getElementById('payment-preview');
+        const submitBtn = document.getElementById('submit-payment');
+        const paymentForm = document.getElementById('payment-form');
+        const verifiedSection = document.getElementById('verified-section');
+        const whatsappFloat = document.getElementById('whatsapp-float');
+        const socket = io();
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check payment status
+            checkPaymentStatus();
+
+            // Set up event listeners
+            setupEventListeners();
+
+            // Socket.io listener for payment approval
+            socket.on('payment-approved', ({ username }) => {
+                if (username === currentUser) {
+                    paymentForm.style.display = 'none';
+                    verifiedSection.style.display = 'block';
+                    whatsappFloat.style.display = 'none';
+                }
+            });
+        });
+
+        function setupEventListeners() {
+            // Logout button
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('userFirstName');
+                window.location.href = 'login.html';
+            });
+
+            // Payment proof preview
+            paymentProofInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        paymentPreview.src = event.target.result;
+                        paymentPreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Submit payment
+            submitBtn.addEventListener('click', async function() {
+                const fileInput = document.getElementById('payment-proof');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    alert('Please upload payment proof');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('username', localStorage.getItem('currentUser'));
+                formData.append('paymentProof', fileInput.files[0]);
+
+                try {
+                    const response = await fetch('/api/submit-payment', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error('Payment submission failed');
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Payment submitted successfully! Admin will verify it shortly.');
+                    }
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    alert('Failed to submit payment. Please try again.');
+                }
+            });
+
+            // WhatsApp float button
+            whatsappFloat.addEventListener('click', function() {
+                checkPaymentStatus(true);
+            });
+        }
+
+        async function checkPaymentStatus(redirect = false) {
+            try {
+                const response = await fetch(`/api/check-payment?username=${localStorage.getItem('currentUser')}`);
+                if (!response.ok) throw new Error('Failed to check payment status');
+
+                const result = await response.json();
+                if (result.verified) {
+                    paymentForm.style.display = 'none';
+                    verifiedSection.style.display = 'block';
+                    whatsappFloat.style.display = 'none';
+                    
+                    if (redirect) {
+                        window.location.href = 'https://wa.me/1234567890';
+                    }
+                } else if (redirect) {
+                    window.location.href = 'payments.html';
+                }
+            } catch (error) {
+                console.error('Error checking payment:', error);
+                if (redirect) {
+                    window.location.href = 'payments.html';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
