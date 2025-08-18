@@ -487,7 +487,4 @@ app.get('/index', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ind
 app.get('/item-detail', (req, res) => res.sendFile(path.join(__dirname, 'public', 'item-detail.html')));
 app.get('/payments', (req, res) => res.sendFile(path.join(__dirname, 'public', 'payments.html')));
 
-// 404 handler
-app.use((req, res) => res.status(404).sendFile(path.join(__dirname, 'public', '404.html')));
-
 server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
