@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Reality | Gallery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-light: #5dade2;
+            --primary-dark: #2980b9;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --white: #ffffff;
+            --card-bg: var(--white);
+            --text-color: var(--dark);
+            --text-muted: var(--gray);
+            --border-color: #dfe6e9;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3498db;
+                --primary-light: #5dade2;
+                --primary-dark: #2980b9;
+                --light: #2c3e50;
+                --dark: #ecf0f1;
+                --gray: #7f8c8d;
+                --white: #34495e;
+                --card-bg: #2c3e50;
+                --text-color: #ecf0f1;
+                --text-muted: #bdc3c7;
+                --border-color: #34495e;
+                --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        /* Header */
+        header {
+            background-color: var(--white);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .logo img {
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+
+        .logo span {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: var(--primary);
+            font-family: 'Arial', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-logout {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-logout:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Slider */
+        .hero-slider {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .swiper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swiper-slide {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+        }
+
+        .slide-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .slide-description {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .slide-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .slide-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+
+        .swiper-pagination-bullet {
+            background: white;
+            opacity: 0.6;
+        }
+
+        .swiper-pagination-bullet-active {
+            background: var(--primary);
+            opacity: 1;
+        }
+
+        /* Main content */
+        .gallery-container {
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .gallery-item {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .media-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+        }
+
+        .media-container img, .media-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover .media-container img,
+        .gallery-item:hover .media-container video {
+            transform: scale(1.05);
+        }
+
+        .video-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .video-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .video-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+
+        .item-info {
+            padding: 1rem;
+        }
+
+        .item-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .item-project {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .item-date {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            padding: 0.3rem 0.5rem;
+            border-radius: 15px;
+        }
+
+        .action-btn:hover {
+            color: var(--primary);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .action-btn.liked {
+            color: var(--danger);
+        }
+
+        /* Floating action buttons */
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 90;
+        }
+
+        .fab {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .fab:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .fab.disclosure {
+            background: var(--secondary);
+        }
+
+        .fab-tooltip {
+            position: absolute;
+            right: 70px;
+            background: var(--dark);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .fab:hover .fab-tooltip {
+            opacity: 1;
+            right: 80px;
+        }
+
+        /* Loading more indicator */
+        .loading-more {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-slider {
+                height: 400px;
+            }
+
+            .slide-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .gallery {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .hero-slider {
+                height: 500px;
+            }
+
+            .slide-title {
+                font-size: 3rem;
+            }
+        }
+   :root {
+    --primary: #1877f2; /* Facebook blue */
+    --primary-light: #4599ff;
+    --primary-dark: #166fe5;
+    --secondary: #42b72a; /* Facebook green */
+    --danger: #e74c3c;
+    --light: #f0f2f5; /* Facebook background */
+    --dark: #1c1e21; /* Dark text */
+    --gray: #65676b; /* Secondary text */
+    --white: #ffffff;
+    --card-bg: var(--white);
+    --text-color: var(--dark);
+    --text-muted: var(--gray);
+    --border-color: #dddfe2; /* Facebook border */
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --transition: all 0.2s ease;
+    --border-radius: 8px;
+    --post-padding: 12px 16px;
+}
+
+/* Dark theme variables */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary: #1877f2;
+        --primary-light: #4599ff;
+        --primary-dark: #166fe5;
+        --light: #18191a; /* Dark mode background */
+        --dark: #e4e6eb; /* Dark mode text */
+        --gray: #b0b3b8; /* Dark mode secondary text */
+        --white: #242526; /* Dark mode card background */
+        --card-bg: var(--white);
+        --text-color: var(--dark);
+        --text-muted: var(--gray);
+        --border-color: #3e4042; /* Dark mode border */
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--light);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.34;
+    min-height: 100vh;
+    position: relative;
+    transition: var(--transition);
+}
+
+/* Header */
+header {
+    background-color: var(--white);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+.logo img {
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+}
+
+.logo span {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9375rem;
+}
+
+.btn-logout {
+    background: var(--danger);
+    color: var(--white);
+}
+
+.btn-logout:hover {
+    background: #d62c1a;
+    transform: translateY(-1px);
+}
+
+/* Main container */
+.container {
+    padding: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* Facebook-style post container */
+.post {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    margin-bottom: 16px;
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: var(--post-padding);
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+}
+
+.post-user {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-color);
+}
+
+.post-time {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.post-content {
+    padding: 0 16px 12px;
+}
+
+.post-text {
+    margin-bottom: 12px;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.post-media {
+    width: 100%;
+    border-radius: var(--border-radius);
+    margin-bottom: 12px;
+    max-height: 500px;
+    object-fit: contain;
+    background: var(--light);
+}
+
+.post-actions {
+    display: flex;
+    border-top: 1px solid var(--border-color);
+    padding: 8px 16px;
+}
+
+.action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: var(--transition);
+    border-radius: 4px;
+}
+
+.action-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.action-btn i {
+    margin-right: 6px;
+}
+
+.action-btn.liked {
+    color: var(--danger);
+}
+
+/* Comment section */
+.comment-section {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    background: var(--light);
+}
+
+.comment-input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-input {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 8px 12px;
+    font-size: 0.9375rem;
+    color: var(--text-color);
+    transition: var(--transition);
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+}
+
+.comments-list {
+    margin-top: 12px;
+}
+
+.comment {
+    display: flex;
+    margin-bottom: 12px;
+}
+
+.comment-content {
+    margin-left: 8px;
+    background: var(--card-bg);
+    padding: 8px 12px;
+    border-radius: 18px;
+    max-width: calc(100% - 40px);
+}
+
+.comment-author {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--text-color);
+}
+
+.comment-text {
+    font-size: 0.9375rem;
+    margin-top: 2px;
+    word-break: break-word;
+}
+
+.comment-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Stats cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-title {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 16px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    font-size: 0.9375rem;
+    transition: var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+    padding: 12px;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 12px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .post-media {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo span {
+        display: none;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .post-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .action-btn {
+        justify-content: flex-start;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease forwards;
+}
+
+/* Utility classes */
+.empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-muted);
+}
+
+.hidden {
+    display: none;
+}</style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <img src="logo.png" alt="Dream Reality Logo">
+            <span>DREAM REALITY</span>
+        </a>
+        <div class="user-actions">
+            <span id="username">Welcome, User</span>
+            <button class="btn btn-logout" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Slider -->
+    <div class="hero-slider">
+        <div class="swiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('hero1.jpg')">
+                    <div class="slide-content">
+                        <h2 class="slide-title">Share Your Journey</h2>
+                        <p class="slide-description">Join our community of creators and share your artistic vision with the world</p>
+                        <a href="#" class="slide-btn">Get Started</a>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('hero2.jpg')">
+                    <div class="slide-content">
+                        <h2 class="slide-title">Your Spiritual Path</h2>
+                        <p class="slide-description">Share your revelations and testimonies with our supportive community</p>
+                        <a href="disclosure.html" class="slide-btn">Share Now</a>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('hero3.jpg')">
+                    <div class="slide-content">
+                        <h2 class="slide-title">Connect With Us</h2>
+                        <p class="slide-description">Get personalized guidance and support from our spiritual advisors</p>
+                        <a href="payments.html" class="slide-btn">Verify Payment</a>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="gallery-container">
+        <h2 class="section-title">Featured Creations</h2>
+        <div class="gallery" id="gallery">
+            <!-- Items will be loaded here -->
+        </div>
+        <div class="loading-more" id="loadingMore" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading more content...</p>
+        </div>
+    </div>
+
+    <!-- Floating action buttons -->
+    <div class="fab-container">
+        <div class="fab disclosure" id="disclosureFab">
+            <i class="fas fa-praying-hands"></i>
+            <span class="fab-tooltip">Share Disclosure</span>
+        </div>
+        <div class="fab" id="whatsappFab">
+            <i class="fab fa-whatsapp"></i>
+            <span class="fab-tooltip">Chat with Admin</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+    <script>
+        // Global variables
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = true;
+        let currentPlayingVideo = null;
+        const socket = io();
+
+        // DOM elements
+        const gallery = document.getElementById('gallery');
+        const loadingMore = document.getElementById('loadingMore');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const whatsappFab = document.getElementById('whatsappFab');
+        const disclosureFab = document.getElementById('disclosureFab');
+        const usernameSpan = document.getElementById('username');
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Set username
+            usernameSpan.textContent = `Welcome, ${localStorage.getItem('userFirstName') || 'User'}`;
+
+            // Initialize Swiper
+            const swiper = new Swiper('.swiper', {
+                loop: true,
+                autoplay: {
+                    delay: 5000,
+                    disableOnInteraction: false,
+                },
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+            });
+
+            // Load initial content
+            loadContent();
+
+            // Set up event listeners
+            setupEventListeners();
+
+            // Socket.io listeners
+            socket.on('content-updated', (items) => {
+                renderItems(items);
+            });
+
+            socket.on('like-updated', ({ itemId, likes, likedBy }) => {
+                updateLikeStatus(itemId, likes, likedBy);
+            });
+
+            socket.on('payment-approved', ({ username }) => {
+                if (username === localStorage.getItem('currentUser')) {
+                    alert('Your payment has been approved!');
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+
+        function setupEventListeners() {
+            // Logout button
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('userFirstName');
+                window.location.href = 'login.html';
+            });
+
+            // WhatsApp button
+            whatsappFab.addEventListener('click', async () => {
+                try {
+                    const response = await fetch(`/api/check-payment?username=${localStorage.getItem('currentUser')}`);
+                    if (!response.ok) throw new Error('Failed to check payment status');
+
+                    const result = await response.json();
+                    if (result.verified) {
+                        window.location.href = 'https://wa.me/1234567890';
+                    } else {
+                        window.location.href = 'payments.html';
+                    }
+                } catch (error) {
+                    console.error('Error checking payment:', error);
+                    window.location.href = 'payments.html';
+                }
+            });
+
+            // Disclosure button
+            disclosureFab.addEventListener('click', () => {
+                window.location.href = 'disclosure.html';
+            });
+
+            // Infinite scroll
+            window.addEventListener('scroll', () => {
+                if (isLoading || !hasMore) return;
+
+                const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+                if (scrollTop + clientHeight >= scrollHeight - 100) {
+                    loadMoreContent();
+                }
+            });
+        }
+
+        async function loadContent() {
+            isLoading = true;
+            try {
+                const response = await fetch(`/api/content`);
+                if (!response.ok) throw new Error('Failed to load content');
+                
+                const { items } = await response.json();
+                
+                if (items.length === 0) {
+                    gallery.innerHTML = '<div class="empty-state"><p>No content available yet. Check back later!</p></div>';
+                    return;
+                }
+                
+                renderItems(items);
+            } catch (error) {
+                console.error('Error loading content:', error);
+                gallery.innerHTML = `<div class="empty-state"><p>Error loading content: ${error.message}</p></div>`;
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function renderItems(items) {
+            gallery.innerHTML = '';
+            
+            items.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'gallery-item';
+                itemElement.dataset.id = item.id;
+                
+                const isLiked = item.likedBy && item.likedBy.includes(localStorage.getItem('currentUser'));
+                
+                itemElement.innerHTML = `
+                    <div class="media-container" onclick="window.location.href='item-detail.html?id=${item.id}'">
+                        ${item.type === 'video' ? 
+                            `<video autoplay loop muted playsinline>
+                                <source src="/uploads/${item.filename}" type="video/mp4">
+                            </video>` : 
+                            `<img src="/uploads/${item.filename}" alt="${item.title}" loading="lazy">`}
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-title">${item.title}</h3>
+                        <p class="item-project">${item.projectTitle}</p>
+                        <div class="item-meta">
+                            <span class="item-date">${new Date(item.uploadDate).toLocaleDateString()}</span>
+                            <div class="item-actions">
+                                <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" data-id="${item.id}">
+                                    <i class="fas fa-heart"></i>
+                                    <span>${item.likes || 0}</span>
+                                </button>
+                                <button class="action-btn comment-btn" onclick="window.location.href='item-detail.html?id=${item.id}'">
+                                    <i class="fas fa-comment"></i>
+                                    <span>${item.comments ? item.comments.length : 0}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add like event listener
+                const likeBtn = itemElement.querySelector('.like-btn');
+                likeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleLike(likeBtn);
+                });
+                
+                gallery.appendChild(itemElement);
+            });
+        }
+
+        function updateLikeStatus(itemId, likes, likedBy) {
+            const itemElement = document.querySelector(`.gallery-item[data-id="${itemId}"]`);
+            if (itemElement) {
+                const likeBtn = itemElement.querySelector('.like-btn');
+                const likeCount = likeBtn.querySelector('span');
+                
+                likeCount.textContent = likes;
+                likeBtn.classList.toggle('liked', likedBy.includes(localStorage.getItem('currentUser')));
+                
+                // Add pulse animation
+                likeBtn.classList.add('pulse');
+                setTimeout(() => likeBtn.classList.remove('pulse'), 300);
+            }
+        }
+
+        async function handleLike(button) {
+            const itemId = button.getAttribute('data-id');
+            const likeCount = button.querySelector('span');
+            
+            try {
+                const response = await fetch(`/api/content/${itemId}/likes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: localStorage.getItem('currentUser') })
+                });
+                
+                if (!response.ok) throw new Error('Failed to toggle like');
+                
+                const result = await response.json();
+                likeCount.textContent = result.likes;
+                button.classList.toggle('liked', result.liked);
+            } catch (error) {
+                console.error('Like error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
